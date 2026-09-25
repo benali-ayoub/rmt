@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Star, ArrowUpRight } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Star, ArrowUpRight, Pause, Play, X } from 'lucide-react';
 
 const reviews = [
   { name: 'Alla Kleban', initials: 'AK', text: 'Going to Morocco? Book Abdu immediately! When we got completely swallowed by the Medina’s maze of alleyways, he came and found us. The whole trip he handled everything — reservations, local markets, things we didn’t even know we needed. Funny, attentive, and genuinely invested in giving us the best genuine experience. I would get lost in the Medina again just to work with him. ❤️🇲🇦' },
@@ -13,21 +13,41 @@ const reviews = [
 ];
 
 export default function TravelerReviews() {
-  const [expanded, setExpanded] = useState<number[]>([]);
+  const [paused, setPaused] = useState(false);
+  const [selected, setSelected] = useState<number | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  function openReview(index: number) {
+    setSelected(index);
+    setPaused(true);
+    window.requestAnimationFrame(() => dialog.current?.showModal());
+  }
+  function closeReview() {
+    dialog.current?.close();
+    setSelected(null);
+  }
+  const renderReview = (review: typeof reviews[number], index: number, duplicate = false) => {
+    const isLong = review.text.length > 210;
+    return <article className="review-card" key={`${review.name}-${duplicate ? 'copy' : 'original'}`} aria-hidden={duplicate || undefined}>
+      <div className="review-stars" aria-label={duplicate ? undefined : '5 out of 5 stars'}>{Array.from({ length: 5 }, (_, star) => <Star key={star} size={16} fill="currentColor" aria-hidden="true"/>)}</div>
+      <blockquote className="review-quote">{review.text}</blockquote>
+      {isLong && <button className="review-expand" tabIndex={duplicate ? -1 : undefined} onClick={() => openReview(index)}>Read full review</button>}
+      <div className="review-author"><span className={`review-avatar tone-${index % 3}`} aria-hidden="true">{review.initials}</span><div><h3>{review.name}</h3><p>Google review{review.translated ? ' · Translated by Google' : ''}</p></div></div>
+    </article>;
+  };
   return <section className="reviews-section" id="reviews" aria-labelledby="reviews-title">
     <div className="section">
-      <div className="section-heading"><div><p className="eyebrow">THE MEMORIES THEY TOOK HOME</p><h2 id="reviews-title">Morocco, in their words.</h2></div><p>Real journeys. Personal connections.<br/>Stories from the travelers who came with us.</p></div>
-      <div className="reviews-grid">{reviews.map((review, index) => {
-        const isExpanded = expanded.includes(index);
-        const isLong = review.text.length > 300;
-        return <article className="review-card" key={review.name}>
-          <div className="review-stars" aria-label="5 out of 5 stars">{Array.from({ length: 5 }, (_, star) => <Star key={star} size={16} fill="currentColor" aria-hidden="true"/>)}</div>
-          <blockquote id={`review-${index}`} className={!isExpanded && isLong ? 'review-quote collapsed' : 'review-quote'}>{review.text}</blockquote>
-          {isLong && <button className="review-expand" aria-expanded={isExpanded} aria-controls={`review-${index}`} onClick={() => setExpanded(current => isExpanded ? current.filter(i => i !== index) : [...current, index])}>{isExpanded ? 'Show less' : 'Read full review'}</button>}
-          <div className="review-author"><span className={`review-avatar tone-${index % 3}`} aria-hidden="true">{review.initials}</span><div><h3>{review.name}</h3><p>Google review{review.translated ? ' · Translated by Google' : ''}</p></div></div>
-        </article>;
-      })}</div>
+      <div className="section-heading reviews-heading"><div><p className="eyebrow">THE MEMORIES THEY TOOK HOME</p><h2 id="reviews-title">Morocco, in their words.</h2></div><div className="reviews-intro"><p>Real journeys. Personal connections.<br/>Stories from the travelers who came with us.</p><button className="reviews-motion" onClick={() => setPaused(current => !current)} aria-label={paused ? 'Resume review carousel' : 'Pause review carousel'}>{paused ? <Play size={15}/> : <Pause size={15}/>} {paused ? 'Resume' : 'Pause'}</button></div></div>
+      <div className="reviews-marquee" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} aria-label="Traveler reviews">
+        <div className={`reviews-track ${paused ? 'paused' : ''}`}>
+          <div className="reviews-set">{reviews.map((review, index) => renderReview(review, index))}</div>
+          <div className="reviews-set" aria-hidden="true">{reviews.map((review, index) => renderReview(review, index, true))}</div>
+        </div>
+      </div>
       <div className="reviews-bottom"><p>A few of the stories shared by our travelers.</p><a className="text-link" href="#plan-your-trip">Let’s plan your own <ArrowUpRight size={18}/></a></div>
     </div>
+    <dialog ref={dialog} className="review-dialog" onClose={() => setSelected(null)} onClick={event => { if (event.target === dialog.current) closeReview(); }} aria-labelledby="full-review-author">
+      <button className="dialog-close" aria-label="Close review" onClick={closeReview}><X/></button>
+      {selected !== null && <div className="review-dialog-content"><div className="review-stars" aria-label="5 out of 5 stars">{Array.from({ length: 5 }, (_, star) => <Star key={star} size={18} fill="currentColor" aria-hidden="true"/>)}</div><blockquote>{reviews[selected].text}</blockquote><div className="review-author"><span className={`review-avatar tone-${selected % 3}`} aria-hidden="true">{reviews[selected].initials}</span><div><h3 id="full-review-author">{reviews[selected].name}</h3><p>Google review{reviews[selected].translated ? ' · Translated by Google' : ''}</p></div></div></div>}
+    </dialog>
   </section>;
 }

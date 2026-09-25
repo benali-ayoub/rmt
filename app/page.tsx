@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { flushSync } from 'react-dom';
 import HeroCarousel from './components/hero-carousel';
 import TravelerReviews from './components/traveler-reviews';
-import { ArrowUpRight, ArrowRight, Crown, Menu, X, MapPin, CalendarDays, Users, Compass, HeartHandshake, MessageCircle, Check, Mountain, Sun, Clock3, ChevronDown } from 'lucide-react';
+import BookingSelect from './components/booking-select';
+import { ArrowUpRight, ArrowRight, Menu, X, MapPin, CalendarDays, Users, Compass, HeartHandshake, MessageCircle, Check, Mountain, Sun, Clock3 } from 'lucide-react';
 
 const number = '212644643319';
 const chat = `https://wa.me/${number}?text=${encodeURIComponent('Hello Royal Morocco Travels! I would like to plan a trip to Morocco.')}`;
@@ -21,7 +22,7 @@ export default function Home() {
   const [travelers, setTravelers] = useState('2 travelers');
   const [selected, setSelected] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
-  const bookingRef = useRef<HTMLSelectElement>(null);
+  const bookingRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const context = (document as Document & { modelContext?: { registerTool: (tool: object, options: { signal: AbortSignal }) => void | Promise<void> } }).modelContext;
     if (!context?.registerTool) return;
@@ -62,7 +63,7 @@ export default function Home() {
   return <>
     <a className="skip-link" href="#main">Skip to content</a>
     <header className="header">
-      <a className="brand" href="#" aria-label="Royal Morocco Travels home"><span className="brand-mark"><Crown size={28} strokeWidth={1.4}/></span><span>ROYAL MOROCCO<small>TRAVELS</small></span></a>
+      <a className="brand" href="#" aria-label="Royal Morocco Travels home"><img className="brand-logo" src="/logo-mark.svg" width="48" height="54" alt=""/><span>ROYAL MOROCCO<small>TRAVELS</small></span></a>
       <nav className={menuOpen ? 'nav open' : 'nav'} aria-label="Main navigation">
         <a href="#journeys" onClick={()=>setMenuOpen(false)}>Our journeys</a><a href="#our-way" onClick={()=>setMenuOpen(false)}>Why travel with us</a><a href="#reviews" onClick={()=>setMenuOpen(false)}>Traveler reviews</a><a href="#contact" onClick={()=>setMenuOpen(false)}>Let’s talk</a>
       </nav>
@@ -75,9 +76,9 @@ export default function Home() {
 
       <section className="booking-wrap" id="plan-your-trip" aria-label="Plan your Morocco trip">
         <form className="booking-bar" onSubmit={submit}>
-          <label className="booking-field"><MapPin size={21}/><span><span className="field-label">YOUR KIND OF MOROCCO</span><select ref={bookingRef} value={destination} onChange={e=>setDestination(e.target.value)} aria-label="Choose your journey"><option>A little of everything</option>{journeys.map(j=><option key={j.name}>{j.name}</option>)}<option>A tailor-made journey</option></select></span><ChevronDown size={15}/></label>
+          <div className="booking-field"><MapPin size={21}/><div className="field-content"><span className="field-label">YOUR KIND OF MOROCCO</span><BookingSelect buttonRef={bookingRef} ariaLabel="Choose your journey" value={destination} onChange={setDestination} options={['A little of everything', ...journeys.map(j => j.name), 'A tailor-made journey']}/></div></div>
           <label className="booking-field date-field"><CalendarDays size={21}/><span><span className="field-label">WHEN DO YOU WANT TO GO?</span><input type="date" aria-label="Travel date, optional" min={minDate} value={date} onChange={e=>setDate(e.target.value)}/></span></label>
-          <label className="booking-field"><Users size={21}/><span><span className="field-label">WHO’S COMING ALONG?</span><select aria-label="Number of travelers" value={travelers} onChange={e=>setTravelers(e.target.value)}><option>Solo traveler</option><option>2 travelers</option><option>3–4 travelers</option><option>5–8 travelers</option><option>9+ travelers</option></select></span><ChevronDown size={15}/></label>
+          <div className="booking-field"><Users size={21}/><div className="field-content"><span className="field-label">WHO’S COMING ALONG?</span><BookingSelect ariaLabel="Number of travelers" value={travelers} onChange={setTravelers} options={['Solo traveler', '2 travelers', '3–4 travelers', '5–8 travelers', '9+ travelers']}/></div></div>
           <button type="submit" className="button dark booking-submit">Let’s plan your trip <ArrowUpRight size={19}/></button>
         </form>
         <p className="booking-hint"><MessageCircle size={14}/> A conversation, not a commitment. Plan directly with us on WhatsApp.</p>
@@ -97,7 +98,7 @@ export default function Home() {
       <TravelerReviews/>
       <section className="contact section" id="contact"><span className="contact-sun"><Sun size={45} strokeWidth={1}/></span><p className="eyebrow light">GREAT JOURNEYS START WITH A HELLO</p><h2>Your Morocco story<br/>starts here.</h2><p>Have a dream trip in mind? Let’s bring it to life.</p><a className="button orange" href={chat} target="_blank" rel="noopener noreferrer"><MessageCircle size={20}/> Let’s talk on WhatsApp <ArrowUpRight size={18}/></a><span className="contact-number">+212 644 643 319</span></section>
     </main>
-    <footer className="footer"><div className="footer-main"><a className="brand" href="#"><span className="brand-mark"><Crown size={27} strokeWidth={1.4}/></span><span>ROYAL MOROCCO<small>TRAVELS</small></span></a><p>A little closer to the Morocco you’ve imagined.</p><a href="#journeys">Explore journeys <ArrowUpRight size={15}/></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} Royal Morocco Travels</span><span>Morocco, with heart.</span></div></footer>
+    <footer className="footer"><div className="footer-main"><a className="brand" href="#"><img className="brand-logo" src="/logo-mark.svg" width="48" height="54" alt=""/><span>ROYAL MOROCCO<small>TRAVELS</small></span></a><p>A little closer to the Morocco you’ve imagined.</p><a href="#journeys">Explore journeys <ArrowUpRight size={15}/></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} Royal Morocco Travels</span><span>Morocco, with heart.</span></div></footer>
     <a className="floating-chat" href={chat} target="_blank" rel="noopener noreferrer" aria-label="Chat with Royal Morocco Travels on WhatsApp"><MessageCircle size={25}/></a>
     <div className="mobile-book"><span>Your journey, your way.</span><button className="button orange" onClick={()=>plan()}>Book your trip <ArrowUpRight size={17}/></button></div>
     <dialog ref={dialog} className="journey-dialog" onClick={event=>{if(event.target === dialog.current)dialog.current?.close();}} aria-labelledby="dialog-title"><button className="dialog-close" aria-label="Close journey details" onClick={()=>dialog.current?.close()}><X/></button>{selected !== null && <><img src={journeys[selected].image} alt={journeys[selected].alt}/><div className="dialog-content"><p className="eyebrow">{journeys[selected].place}</p><h2 id="dialog-title">{journeys[selected].name}</h2><p>{journeys[selected].itinerary}</p><p className="dialog-note"><Check size={17}/> Dates, availability and pricing confirmed with our team.</p><button className="button dark" onClick={()=>plan(journeys[selected].name)}>Plan this journey <ArrowUpRight size={18}/></button></div></>}</dialog>
